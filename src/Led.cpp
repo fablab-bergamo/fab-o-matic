@@ -10,14 +10,16 @@ namespace fablabbg
       return;
     }
 
+    initialized = true;
     ESP_LOGD(TAG, "Initializing LED (pin %d, is_neopixel %d, flags %u)",
              pins.led.pin, pins.led.is_neopixel, pins.led.neopixel_config);
 
-    if (pins.led.is_neopixel)
+    if constexpr (pins.led.is_neopixel)
     {
-      pixel.begin();
+      pixel.emplace(1, pins.led.pin, pins.led.neopixel_config);
+      pixel->begin();
     }
-    else if (pins.led.is_rgb)
+    else if constexpr (pins.led.is_rgb)
     {
       pinMode(pins.led.pin, OUTPUT);
       pinMode(pins.led.green_pin, OUTPUT);
@@ -28,7 +30,6 @@ namespace fablabbg
       digitalWrite(pins.led.pin, LOW);
       pinMode(pins.led.pin, OUTPUT);
     }
-    initialized = true;
   }
 
   auto Led::setColor(uint8_t r, uint8_t g, uint8_t b) -> void
@@ -43,18 +44,23 @@ namespace fablabbg
 
   auto Led::outputColor(uint8_t r, uint8_t g, uint8_t b) -> void
   {
+    if constexpr (pins.led.pin == NO_PIN)
+    {
+      return;
+    }
+
     if constexpr (pins.led.is_neopixel)
     {
-      pixel.setPixelColor(0, r, g, b);
-      pixel.show();
+      pixel->setPixelColor(0, r, g, b);
+      pixel->show();
     }
-    if constexpr (pins.led.is_rgb)
+    else if constexpr (pins.led.is_rgb)
     {
       analogWrite(pins.led.pin, r);
       analogWrite(pins.led.green_pin, g);
       analogWrite(pins.led.blue_pin, b);
     }
-    if constexpr (!pins.led.is_rgb || !pins.led.is_neopixel)
+    else
     {
       auto light = r > 0 || g > 0 || b > 0;
       digitalWrite(pins.led.pin, light ? HIGH : LOW);

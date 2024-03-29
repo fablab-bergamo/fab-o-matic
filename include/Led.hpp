@@ -4,6 +4,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <Arduino.h>
 #include <memory>
+#include <optional>
 
 #include "pins.hpp"
 
@@ -26,7 +27,7 @@ namespace fablabbg
     void update();
 
   private:
-    Adafruit_NeoPixel pixel{1, pins.led.pin, pins.led.neopixel_config};
+    std::optional<Adafruit_NeoPixel> pixel;
     std::array<uint8_t, 3> color{128, 128, 128};
     Status status{Status::On};
     bool isOn{false};
